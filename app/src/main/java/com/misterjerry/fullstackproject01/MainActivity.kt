@@ -1,7 +1,10 @@
 package com.misterjerry.fullstackproject01
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.view.ViewGroup
+import android.webkit.JsResult
+import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
@@ -26,7 +29,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Fullstackproject01Theme {
-                Scaffold(modifier = Modifier.fillMaxSize()) {innerPadding->
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     MyWebView(
                         url = "https://full-stack-project01-frontend-hazel.vercel.app",
                         modifier = Modifier.padding(innerPadding)
@@ -44,22 +47,41 @@ fun MyWebView(url: String, modifier: Modifier = Modifier) {
         webView?.goBack()
     }
     AndroidView(
-        modifier=Modifier.fillMaxSize(),
-        factory = {context->
+        modifier = Modifier.fillMaxSize(),
+        factory = { context ->
             WebView(context).apply {
                 layoutParams = ViewGroup.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT,
                 )
-                settings.javaScriptEnabled=true
-                settings.domStorageEnabled=true
+                settings.javaScriptEnabled = true
+                settings.domStorageEnabled = true
                 webViewClient = WebViewClient()
+
+                webChromeClient = object : WebChromeClient() {
+                    override fun onJsAlert(
+                        view: WebView?,
+                        url: String?,
+                        message: String?,
+                        result: JsResult?
+                    ): Boolean {
+                        AlertDialog.Builder(context)
+                            .setMessage(message)
+                            .setPositiveButton("확인") { _, _ ->
+                                result?.confirm()
+                            }
+                            .setCancelable(false)
+                            .show()
+                        return true
+                    }
+                }
+
                 loadUrl(url)
-                webView=this
+                webView = this
             }
         },
         update = {
-            webView=it
+            webView = it
         }
     )
 }
