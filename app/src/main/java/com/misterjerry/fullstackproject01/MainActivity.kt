@@ -7,6 +7,7 @@ import android.webkit.JsResult
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -65,13 +66,15 @@ fun MyWebView(url: String, modifier: Modifier = Modifier) {
                         message: String?,
                         result: JsResult?
                     ): Boolean {
-                        AlertDialog.Builder(context)
-                            .setMessage(message)
-                            .setPositiveButton("확인") { _, _ ->
-                                result?.confirm()
-                            }
-                            .setCancelable(false)
-                            .show()
+//                        AlertDialog.Builder(context)
+//                            .setMessage(message)
+//                            .setPositiveButton("확인") { _, _ ->
+//                                result?.confirm()
+//                            }
+//                            .setCancelable(false)
+//                            .show()
+                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                        result?.confirm()
                         return true
                     }
                 }
