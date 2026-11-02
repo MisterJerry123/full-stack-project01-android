@@ -1,17 +1,21 @@
 package com.misterjerry.fullstackproject01
 
 import android.app.AlertDialog
+import android.net.Uri
 import android.os.Bundle
 import android.view.ViewGroup
 import android.webkit.JsResult
+import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -44,11 +48,22 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MyWebView(url: String, modifier: Modifier = Modifier) {
     var webView: WebView? by remember { mutableStateOf(null) }
+    var uploadCallback  by remember { mutableStateOf<ValueCallback<Array<Uri>>?>(null) }
+
+    val filePickerLauncher =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri? ->
+            if (uri != null) {
+                uploadCallback ?.onReceiveValue(arrayOf(uri))
+            } else {
+                uploadCallback ?.onReceiveValue(emptyArray())
+            }
+            uploadCallback  = null
+        }
     BackHandler(enabled = webView?.canGoBack() == true) {
         webView?.goBack()
     }
     AndroidView(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         factory = { context ->
             WebView(context).apply {
                 layoutParams = ViewGroup.LayoutParams(
@@ -77,8 +92,17 @@ fun MyWebView(url: String, modifier: Modifier = Modifier) {
                         result?.confirm()
                         return true
                     }
+                    override fun onShowFileChooser(
+                        webView: WebView?,
+                        filePathCallback: ValueCallback<Array<Uri>>?,
+                        fileChooserParams: FileChooserParams?
+                    ): Boolean {
+                        uploadCallback ?.onReceiveValue(emptyArray())
+                        uploadCallback = filePathCallback
+                        filePickerLauncher.launch("image/*")
+                        return true
+                    }
                 }
-
                 loadUrl(url)
                 webView = this
             }
