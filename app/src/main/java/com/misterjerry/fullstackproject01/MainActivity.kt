@@ -36,7 +36,9 @@ class MainActivity : ComponentActivity() {
             Fullstackproject01Theme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     MyWebView(
-                        url = "https://full-stack-project01-frontend-hazel.vercel.app",
+                        //url = "https://full-stack-project01-frontend-hazel.vercel.app",
+                        //에뮬레이터용 url = "http://10.0.2.2:5173",
+                        url = "http://localhost:5173",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -48,18 +50,19 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MyWebView(url: String, modifier: Modifier = Modifier) {
     var webView: WebView? by remember { mutableStateOf(null) }
-    var uploadCallback  by remember { mutableStateOf<ValueCallback<Array<Uri>>?>(null) }
+    var uploadCallback by remember { mutableStateOf<ValueCallback<Array<Uri>>?>(null) }
+    var canGoBack by remember { mutableStateOf(false) }
 
     val filePickerLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri? ->
             if (uri != null) {
-                uploadCallback ?.onReceiveValue(arrayOf(uri))
+                uploadCallback?.onReceiveValue(arrayOf(uri))
             } else {
-                uploadCallback ?.onReceiveValue(emptyArray())
+                uploadCallback?.onReceiveValue(emptyArray())
             }
-            uploadCallback  = null
+            uploadCallback = null
         }
-    BackHandler(enabled = webView?.canGoBack() == true) {
+    BackHandler(enabled = canGoBack) {
         webView?.goBack()
     }
     AndroidView(
@@ -72,7 +75,17 @@ fun MyWebView(url: String, modifier: Modifier = Modifier) {
                 )
                 settings.javaScriptEnabled = true
                 settings.domStorageEnabled = true
-                webViewClient = WebViewClient()
+                webViewClient = object : WebViewClient() {
+
+                    override fun doUpdateVisitedHistory(
+                        view: WebView?,
+                        url: String?,
+                        isReload: Boolean
+                    ) {
+                        super.doUpdateVisitedHistory(view, url, isReload)
+                        canGoBack = view?.canGoBack() == true
+                    }
+                }
 
                 webChromeClient = object : WebChromeClient() {
                     override fun onJsAlert(
@@ -97,7 +110,7 @@ fun MyWebView(url: String, modifier: Modifier = Modifier) {
                         filePathCallback: ValueCallback<Array<Uri>>?,
                         fileChooserParams: FileChooserParams?
                     ): Boolean {
-                        uploadCallback ?.onReceiveValue(emptyArray())
+                        uploadCallback?.onReceiveValue(emptyArray())
                         uploadCallback = filePathCallback
                         filePickerLauncher.launch("image/*")
                         return true
