@@ -83,7 +83,10 @@ fun MyWebView(url: String, modifier: Modifier = Modifier) {
                         isReload: Boolean
                     ) {
                         super.doUpdateVisitedHistory(view, url, isReload)
-                        canGoBack = view?.canGoBack() == true
+                        val exceptUrls = listOf("/posts", "/login")
+                        val isExceptUrl = url?.let { u -> exceptUrls.any { u.endsWith(it) } } ?: false
+
+                        canGoBack = view?.canGoBack() == true && !isExceptUrl
                     }
                 }
 
